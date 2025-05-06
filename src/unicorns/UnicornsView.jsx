@@ -2,6 +2,8 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 const UnicornsView = ({
   unicorn,
@@ -13,9 +15,72 @@ const UnicornsView = ({
   updateUnicorn,
   editingId
 }) => {
+
+    const exportToPDF = () => {
+      const doc = new jsPDF();
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(128, 0, 128); 
+      doc.text("Listado de Unicornios Mágicos", 14, 20);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      const today = new Date().toLocaleDateString();
+      doc.text(`Generado el: ${today}`, 14, 30);
+
+      const tableData = unicorns.map((unicorn) => [
+        unicorn.name,
+        unicorn.color,
+        unicorn.power,
+        unicorn.age.toString()
+      ]);
+
+      doc.autoTable({
+        startY: 35,
+        head: [['Nombre', 'Color', 'Poder', 'Edad']],
+        body: tableData,
+        theme: "grid",
+        headStyles: {
+          fillColor: [147, 112, 219], 
+          textColor: [255, 255, 255],
+          fontStyle: "bold"
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 255] 
+        },
+        margin: { top: 35 }
+      });
+      
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(
+          `Página ${i} de ${pageCount}`,
+          doc.internal.pageSize.getWidth() / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: "center" }
+        );
+      }
+   
+      doc.save("listado-unicornios.pdf");
+    };
+
   return (
     <div className="p-4">
-      <h2>Gestión de Unicornios 🦄</h2>
+      <div className="flex justify-content-between align-items-center mb-3">
+        <h2>Gestión de Unicornios 🦄</h2>
+        <Button 
+          label="Exportar PDF" 
+          icon="pi pi-file-pdf" 
+          className="p-button-info" 
+          onClick={exportToPDF} 
+          style={{ backgroundColor: '#8a2be2', borderColor: '#8a2be2' }}
+        />
+      </div>
 
       <div className="p-fluid grid formgrid">
         <div className="field col">
